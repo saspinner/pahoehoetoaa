@@ -136,7 +136,6 @@ def calc_J_vectors(lines="d2s", variables="mu2s", **params):
 
 
 def generate_figure(J_vectors, x_axis, variable, path="images/", **params):
-    print("updates as of 2:56")
     if not os.path.exists(path):
         os.mkdir(path)
     
