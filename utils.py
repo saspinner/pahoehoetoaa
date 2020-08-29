@@ -10,24 +10,35 @@ This file handles the majority of the graphing work needed to test the linear st
 the long wave perturbation approximation. 
 
 The two functions to be used in a jupyter notebook are plot_vel_profile() and plot_stability_graph(). 
+
+TODO: 
 """
 
 
-def yihJ(**args):
+def yihJ(**params):
     """ 
     Calculates J, equation (42) in Yih 1967.
     """ 
 
     # set up constants
     rho2, rho1, mu2, mu1, d2, d1, g, K, U0, verbose = \
-        (args["rho2"], args["rho1"], args["mu2"], 
-             args["mu1"], args["d2"], args["d1"], 
-                 args["g"], args["dP"], args["U0"], args["verbose"])
+        (params["rho2"], params["rho1"], params["mu2"], 
+             params["mu1"], params["d2"], params["d1"], 
+                 params["g"], params["dP"], params["U0"], params["verbose"])
     
     r = rho2 / rho1
     m = mu2 / mu1
     n = d2 / d1
-    # these are all steady state quantities
+
+    args = (r, m, n, g, K, U0) 
+
+    cache = False
+    if "cache" in params:
+        cache = True
+   
+    if cache and args in params["cache"]:
+        cache = False
+        return params["cache"]
     
     A2 = -(0.5 * K * U0) / mu2 * d1**2
     A1 = m * A2 
@@ -101,6 +112,10 @@ def yihJ(**args):
         print('second term of J', (m * (h_1p - 2 * h_1) - J2 - ((2 / n) * H2) + (((m - n ** 2)/(2* (1 + n))) * (h_1 - h_1p - (J2 / n) - (H2 / n ** 2)))))
         print('J', J)
         print()
+
+    if cache:
+        params["cache"][args] = J
+
     return J
 
 def calc_J_vectors(lines="d2s", variables="mu2s", **params):
@@ -121,32 +136,52 @@ def calc_J_vectors(lines="d2s", variables="mu2s", **params):
 
 
 def generate_figure(J_vectors, x_axis, variable, path="images/", **params):
-
+    print("updates as of 2:56")
     if not os.path.exists(path):
         os.mkdir(path)
     
     if "figsize" not in params:
         params["figsize"] = (8,4)
     
-    fig = plt.figure(figsize=params["figsize"])
+    fig, ax = plt.subplots(figsize=params["figsize"])
+
+    # remove the top, bottom, and left axes
+    ax.spines['top'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
     
     color_idx_red = 0
     color_idx_blue =0
     
     colors_red, colors_blue = (params["colors_red"], params["colors_blue"])
+
+    
+    if "label_size" not in params:
+        params["label_size"] = 14
+    if "title_size" not in params:
+        params["title_size"] = 14
+
+    label_size = params["label_size"]
+    title_size = params["title_size"]
     
     for d2 in J_vectors:
         if d2 > 1:
             J = J_vectors[d2]
             plt.plot(params[x_axis], J, label=d2, color=colors_red[color_idx_red % len(colors_red)])
             color_idx_red += 1
-        else:
+        elif d2 < 1:
             J = J_vectors[d2]
             plt.plot(params[x_axis], J, label=d2, color=colors_blue[color_idx_blue % len(colors_blue)])
             color_idx_blue += 1
+        # top and bottom layer are same height
+        else:
+            J = J_vectors[d2]
+            plt.plot(params[x_axis], J, label=d2, color=params["color_one"])
+            
     
     plt.axhline(y=0, color="black", linestyle="--")
-    plt.legend()
+    plt.legend(title="$ n \ \ (d_2 / d_1)$")
 
     K = params["dP"]
     U0 = params["U0"]
@@ -155,31 +190,33 @@ def generate_figure(J_vectors, x_axis, variable, path="images/", **params):
     r = round(params["rho2"] / params["rho1"], 3)
     
     if variable == "viscosity":
-        plt.title("Stability of interface over changing {}, g,r,K,U0={},{},{},{}".format(variable, g, r, K, U0))
-        plt.xlabel("m, μ2 / μ1")
+        title = "Stability of interface over changing {}, g,r,k,u0={},{},{},{}".format(variable,
+                    g, r, K, U0)
+        xlabel = "$m \ \ (\mu_2 / \mu_1)$"
         plt.xscale("log")
         
         if ("viscosity_lim" in params):
             plt.ylim(params["viscosity_lim"])
         
     if variable == "density":
-        plt.title("Stability of interface over changing {}, g,m,K,U0={},{},{},{}".format(variable, g, m, K, U0))
-        plt.xlabel("r, rho2 / rho1")
+        title = "Stability of interface over changing {}, g,m,K,U0={},{},{},{}".format(variable, g, m, K, U0)
+        xlabel = "$r \ \  (rho2 / rho1)$"
         plt.xscale("log")
         
         if ("density_lim" in params):
             plt.ylim(params["density_lim"])
         
     if variable == "differential pressure":
-        plt.title("Stability of interface over changing {}, g,r,m,U0={},{},{},{}".format(variable, g, r, m, U0))
-        plt.xlabel("K, - dP / dX")
+        title = "Stability of interface over changing {}, g,r,m,U0={},{},{},{}".format(variable, g, r, m, U0)
+        xlabel = "$K \ \ (-\partial p / \partial X)$"
         
         if ("pressure_lim" in params):
             plt.ylim(params["pressure_lim"])
         
     
-    
-    plt.ylabel("J, positive values represent instabilities")
+    plt.title(title, fontsize=title_size) 
+    plt.xlabel(xlabel, fontsize=label_size) 
+    plt.ylabel("J", fontsize=label_size)
     
     if "save" in params:
         filename = "{}_stability_".format(variable)
@@ -197,6 +234,7 @@ def generate_figure(J_vectors, x_axis, variable, path="images/", **params):
             filename = params["save"]
         filename = filename.replace(".", ",")
         plt.savefig(path + filename)
+
 
     # When this function is called multiple times in one cell
     # there is a risk of overflowing ram. This usually happens at 
@@ -237,19 +275,31 @@ def plot_vel_profile(**params):
 
     velocity_profile = np.concatenate((U2, U1))
 
-    plt.figure(figsize=(8,4))
+    fig, ax = plt.subplots(figsize=(8,4))
+
+    # remove the top, bottom, and left axes
+    ax.spines['top'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
     
     # Visualize boundaries of layers and the interface
     plt.axhline(y=0, color="black", linestyle ="--") 
-    plt.axhline(y= d1 / d1, color="black", linestyle ="--") 
-    plt.axhline(y= -d2 / d1, color="black", linestyle ="--") 
+    plt.axhline(y= d1 / d1, color="black") 
+    plt.axhline(y= -d2 / d1, color="black") 
 
     # generate plot, label axes, title
     plt.plot(velocity_profile, np.concatenate((y2s, y1s)))
     title="Velocity Profile n={}, m={}, K={}, U0={}".format(d2 / d1, mu2 / mu1, K, U0)
-    plt.title(title)
-    plt.ylabel("Flow height / d1, U1 > 0, U2 < 0")
-    plt.xlabel("Velocity of flow")
+
+    if "label_size" not in params:
+        params["label_size"] = 14
+    if "title_size" not in params:
+        params["title_size"] = 14
+
+    plt.title(title, fontsize=params["title_size"])
+    plt.ylabel("Dimensionless flow height", fontsize=params["label_size"])
+    plt.xlabel("Dimensionless velocity of flow", fontsize=params["label_size"])
     
 
 def plot_stability_graph(**params):
