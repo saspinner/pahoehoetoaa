@@ -12,6 +12,8 @@ the long wave perturbation approximation.
 The two functions to be used in a jupyter notebook are plot_vel_profile() and plot_stability_graph(). 
 
 TODO: 
+-make variable title/save location
+
 """
 
 
@@ -136,13 +138,16 @@ def calc_J_vectors(lines="d2s", variables="mu2s", **params):
 
 
 def generate_figure(J_vectors, x_axis, variable, path="images/", **params):
+    print("updates 6:27pm")
+
+
     if not os.path.exists(path):
         os.mkdir(path)
     
-    if "figsize" not in params:
-        params["figsize"] = (8,4)
+    if "stability_figsize" not in params:
+        params["stability_figsize"] = (8,4)
     
-    fig, ax = plt.subplots(figsize=params["figsize"])
+    fig, ax = plt.subplots(figsize=params["stability_figsize"])
 
     # remove the top, bottom, and left axes
     ax.spines['top'].set_visible(False)
@@ -180,44 +185,73 @@ def generate_figure(J_vectors, x_axis, variable, path="images/", **params):
             
     
     plt.axhline(y=0, color="black", linestyle="--")
-    plt.legend(title="$ n \ \ (d_2 / d_1)$")
+
+    # we don't want to automatically include a legend
+    # if user has made legend settings
 
     K = params["dP"]
     U0 = params["U0"]
     g = params["g"]
     m = round(params["mu2"] / params["mu1"], 3)
     r = round(params["rho2"] / params["rho1"], 3)
+
+    include_legend = False
     
     if variable == "viscosity":
-        title = "Stability of interface over changing {}, g,r,k,u0={},{},{},{}".format(variable,
+        if "visc_title" in params:
+            title = params["visc_title"]
+        else: 
+            title = "Stability of interface over changing {}, g,r,k,u0={},{},{},{}".format(variable,
                     g, r, K, U0)
+
         xlabel = "$m \ \ (\mu_2 / \mu_1)$"
         plt.xscale("log")
         
         if ("viscosity_lim" in params):
             plt.ylim(params["viscosity_lim"])
+
+        if "legends" in params and params["legends"][0]:
+            include_legend = True
         
     if variable == "density":
-        title = "Stability of interface over changing {}, g,m,K,U0={},{},{},{}".format(variable, g, m, K, U0)
-        xlabel = "$r \ \  (rho2 / rho1)$"
+
+        if "dens_title" in params:
+            title = params["dens_title"]
+        else: 
+            title = "Stability of interface over changing {}, g,m,K,U0={},{},{},{}".format(variable, g, m, K, U0)
+
+        # unicode character for lowercase rho
+        xlabel = "$r \ \  (\u03C1_2 / \u03C1_1)$"
         plt.xscale("log")
         
         if ("density_lim" in params):
             plt.ylim(params["density_lim"])
         
+        if "legends" in params and params["legends"][1]:
+            include_legend = True
+
     if variable == "differential pressure":
-        title = "Stability of interface over changing {}, g,r,m,U0={},{},{},{}".format(variable, g, r, m, U0)
+
+        if "pressure_title" in params:
+            title = params["pressure_title"]
+        else: 
+            title = "Stability of interface over changing {}, g,r,m,U0={},{},{},{}".format(variable, g, r, m, U0)
         xlabel = "$K \ \ (-\partial p / \partial X)$"
         
         if ("pressure_lim" in params):
             plt.ylim(params["pressure_lim"])
-        
+
+        if "legends" in params and params["legends"][2]:
+            include_legend = True
+    
+    if "legends" not in params or include_legend:
+        plt.legend(title="$ n \ \ (d_2 / d_1)$")
     
     plt.title(title, fontsize=title_size) 
     plt.xlabel(xlabel, fontsize=label_size) 
     plt.ylabel("J", fontsize=label_size)
     
-    if "save" in params:
+    if "save" in params and params["save"]:
         filename = "{}_stability_".format(variable)
         
         if variable == "viscosity":
@@ -274,7 +308,10 @@ def plot_vel_profile(**params):
 
     velocity_profile = np.concatenate((U2, U1))
 
-    fig, ax = plt.subplots(figsize=(8,4))
+    if "velocity_figsize" not in params:
+        params["velocity_figsize"] = (8,4)
+    
+    fig, ax = plt.subplots(figsize=params["velocity_figsize"])
 
     # remove the top, bottom, and left axes
     ax.spines['top'].set_visible(False)
@@ -289,7 +326,10 @@ def plot_vel_profile(**params):
 
     # generate plot, label axes, title
     plt.plot(velocity_profile, np.concatenate((y2s, y1s)))
-    title="Velocity Profile n={}, m={}, K={}, U0={}".format(d2 / d1, mu2 / mu1, K, U0)
+    if "vel_title" in params:
+        title = params["vel_title"]
+    else:
+        title="Velocity Profile n={}, m={}, K={}, U0={}".format(d2 / d1, mu2 / mu1, K, U0)
 
     if "label_size" not in params:
         params["label_size"] = 14
