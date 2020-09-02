@@ -12,8 +12,7 @@ the long wave perturbation approximation.
 The two functions to be used in a jupyter notebook are plot_vel_profile() and plot_stability_graph(). 
 
 TODO: 
--make variable title/save location
-
+- Allow plot_vel_profile to graph multiple profiles with varying m over the same n 
 """
 
 
@@ -21,7 +20,6 @@ def yihJ(**params):
     """ 
     Calculates J, equation (42) in Yih 1967.
     """ 
-
     # set up constants
     rho2, rho1, mu2, mu1, d2, d1, g, K, U0, verbose = \
         (params["rho2"], params["rho1"], params["mu2"], 
@@ -137,9 +135,7 @@ def calc_J_vectors(lines="d2s", variables="mu2s", **params):
     return J_vectors
 
 
-def generate_figure(J_vectors, x_axis, variable, path="images/", **params):
-    print("updates 6:27pm")
-
+def generate_figure(J_vectors, x_axis, variable, ax=None, path="images/", **params):
 
     if not os.path.exists(path):
         os.mkdir(path)
@@ -147,7 +143,7 @@ def generate_figure(J_vectors, x_axis, variable, path="images/", **params):
     if "stability_figsize" not in params:
         params["stability_figsize"] = (8,4)
     
-    fig, ax = plt.subplots(figsize=params["stability_figsize"])
+    ax = ax or plt.gca()
 
     # remove the top, bottom, and left axes
     ax.spines['top'].set_visible(False)
@@ -172,19 +168,19 @@ def generate_figure(J_vectors, x_axis, variable, path="images/", **params):
     for d2 in J_vectors:
         if d2 > 1:
             J = J_vectors[d2]
-            plt.plot(params[x_axis], J, label=d2, color=colors_red[color_idx_red % len(colors_red)])
+            ax.plot(params[x_axis], J, label=d2, color=colors_red[color_idx_red % len(colors_red)])
             color_idx_red += 1
         elif d2 < 1:
             J = J_vectors[d2]
-            plt.plot(params[x_axis], J, label=d2, color=colors_blue[color_idx_blue % len(colors_blue)])
+            ax.plot(params[x_axis], J, label=d2, color=colors_blue[color_idx_blue % len(colors_blue)])
             color_idx_blue += 1
         # top and bottom layer are same height
         else:
             J = J_vectors[d2]
-            plt.plot(params[x_axis], J, label=d2, color=params["color_one"])
+            ax.plot(params[x_axis], J, label=d2, color=params["color_one"])
             
     
-    plt.axhline(y=0, color="black", linestyle="--")
+    ax.axhline(y=0, color="gray", linestyle="--")
 
     # we don't want to automatically include a legend
     # if user has made legend settings
@@ -198,17 +194,17 @@ def generate_figure(J_vectors, x_axis, variable, path="images/", **params):
     include_legend = False
     
     if variable == "viscosity":
-        if "visc_title" in params:
+        if "visc_title" in params and params["visc_title"] is not None:
             title = params["visc_title"]
         else: 
             title = "Stability of interface over changing {}, g,r,k,u0={},{},{},{}".format(variable,
                     g, r, K, U0)
 
         xlabel = "$m \ \ (\mu_2 / \mu_1)$"
-        plt.xscale("log")
+        ax.set_xscale("log")
         
         if ("viscosity_lim" in params):
-            plt.ylim(params["viscosity_lim"])
+            ax.set_ylim(params["viscosity_lim"])
 
         if "legends" in params and params["legends"][0]:
             include_legend = True
@@ -222,10 +218,10 @@ def generate_figure(J_vectors, x_axis, variable, path="images/", **params):
 
         # unicode character for lowercase rho
         xlabel = "$r \ \  (\u03C1_2 / \u03C1_1)$"
-        plt.xscale("log")
+        ax.set_xscale("log")
         
         if ("density_lim" in params):
-            plt.ylim(params["density_lim"])
+            ax.set_ylim(params["density_lim"])
         
         if "legends" in params and params["legends"][1]:
             include_legend = True
@@ -239,45 +235,20 @@ def generate_figure(J_vectors, x_axis, variable, path="images/", **params):
         xlabel = "$K \ \ (-\partial p / \partial X)$"
         
         if ("pressure_lim" in params):
-            plt.ylim(params["pressure_lim"])
+            ax.set_ylim(params["pressure_lim"])
 
         if "legends" in params and params["legends"][2]:
             include_legend = True
     
     if "legends" not in params or include_legend:
-        plt.legend(title="$ n \ \ (d_2 / d_1)$")
+        ax.legend(title="$ n \ \ (d_2 / d_1)$")
     
-    plt.title(title, fontsize=title_size) 
-    plt.xlabel(xlabel, fontsize=label_size) 
-    plt.ylabel("J", fontsize=label_size)
+    ax.set_title(title, fontsize=title_size) 
+    ax.set_xlabel(xlabel, fontsize=label_size) 
+    ax.set_ylabel("J", fontsize=label_size)
     
-    if "save" in params and params["save"]:
-        filename = "{}_stability_".format(variable)
-        
-        if variable == "viscosity":
-            filename += "r{}g{}K{}".format(r, g, K)
-            
-        if variable == "density":
-            filename += "m{}g{}K{}".format(m, g, K)
-            
-        if variable == "differential pressure":
-            filename += "m{}g{}r{}".format(m, g, r)
-            
-        if params["save"]:
-            filename = params["save"]
-        filename = filename.replace(".", ",")
-        plt.savefig(path + filename)
 
-
-    # When this function is called multiple times in one cell
-    # there is a risk of overflowing ram. This usually happens at 
-    # 20+ graphs opened simultaneously. In the case where one wants 
-    # to generate many graphs at once but not necessarily see them within
-    # cell of the jupyter notebook, uncomment the following line. 
-        
-    #plt.close(fig)
-
-def plot_vel_profile(**params):
+def plot_vel_profile(ax, path="images/", **params):
     """    
     Plots the dimensionless velocity profile of the superposed Plane Couette flow. 
     Velocity is made dimensionless by surface velocity U0. +y is "upper layer", 
@@ -311,7 +282,7 @@ def plot_vel_profile(**params):
     if "velocity_figsize" not in params:
         params["velocity_figsize"] = (8,4)
     
-    fig, ax = plt.subplots(figsize=params["velocity_figsize"])
+    #fig, ax = plt.subplots(figsize=params["velocity_figsize"])
 
     # remove the top, bottom, and left axes
     ax.spines['top'].set_visible(False)
@@ -320,13 +291,14 @@ def plot_vel_profile(**params):
     ax.spines['bottom'].set_visible(False)
     
     # Visualize boundaries of layers and the interface
-    plt.axhline(y=0, color="black", linestyle ="--") 
-    plt.axhline(y= d1 / d1, color="black") 
-    plt.axhline(y= -d2 / d1, color="black") 
+
+    ax.axhline(y=0, color="black", linestyle ="--") 
+    ax.axhline(y= d1 / d1, color="black") 
+    ax.axhline(y= -d2 / d1, color="black") 
 
     # generate plot, label axes, title
-    plt.plot(velocity_profile, np.concatenate((y2s, y1s)))
-    if "vel_title" in params:
+    ax.plot(velocity_profile, np.concatenate((y2s, y1s)))
+    if "vel_title" in params and params["vel_title"] is not None:
         title = params["vel_title"]
     else:
         title="Velocity Profile n={}, m={}, K={}, U0={}".format(d2 / d1, mu2 / mu1, K, U0)
@@ -336,28 +308,32 @@ def plot_vel_profile(**params):
     if "title_size" not in params:
         params["title_size"] = 14
 
-    plt.title(title, fontsize=params["title_size"])
-    plt.ylabel("Dimensionless flow height", fontsize=params["label_size"])
-    plt.xlabel("Dimensionless velocity of flow", fontsize=params["label_size"])
-    
+    ax.set_title(title, fontsize=params["title_size"])
+    if "y_label" in params and params["y_label"] is not None:
+        ax.set_ylabel(params["y_label"], fontsize=params["label_size"])
+    if "x_label" in params and params["x_label"] is not None:
+        ax.set_xlabel(params["x_label"], fontsize=params["label_size"])
 
-def plot_stability_graph(**params):
+
+def plot_stability_graph(ax, arg="viscosity", **params):
     """
     Checks for the presence of "mu2s", "rho2s", and "dPs" within params. 
     For each one present, graphs the appropriate stability graph. 
     """
+    if arg not in ["viscosity", "density", "velocity"]:
+        raise ValueError("Incorrect arg for plot_stability_graph: {}".format(arg))
     
     # make viscosity change plot
-    if "mu2s" in params.keys():
+    if arg == "viscosity":
         J_vectors = calc_J_vectors(lines="d2s", variables="mu2s", **params)
-        generate_figure(J_vectors, "mu2s", "viscosity", **params)
+        generate_figure(J_vectors, "mu2s", "viscosity", ax, **params)
         
     # make density change plot
-    if "rho2s" in params.keys():
+    if arg == "density":
         J_vectors = calc_J_vectors(lines="d2s", variables="rho2s", **params)
-        generate_figure(J_vectors, "rho2s", "density", **params)
+        generate_figure(J_vectors, "rho2s", "density", ax, **params)
         
     # make K change plot
-    if "dPs" in params.keys():
+    if arg == "velocity":
         J_vectors = calc_J_vectors(lines="d2s", variables="dPs", **params)
-        generate_figure(J_vectors, "dPs", "differential pressure", **params)
+        generate_figure(J_vectors, "dPs", "differential pressure", ax, **params)
