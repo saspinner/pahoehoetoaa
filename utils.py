@@ -2,6 +2,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import math
+from itertools import cycle
 
 """
 utils.py by Sam Spinner. 
@@ -12,7 +13,7 @@ the long wave perturbation approximation.
 The two functions to be used in a jupyter notebook are plot_vel_profile() and plot_stability_graph(). 
 
 TODO: 
-- Allow plot_vel_profile to graph multiple profiles with varying m over the same n 
+- return intercepts of stability curves to check velocity profiles more easily
 """
 
 
@@ -103,7 +104,7 @@ def yihJ(**params):
     J = (((1 / m) * (c_0p ** 2)) / (a1 - a2)) * \
     (m * (h_1p - 2 * h_1) - J2 - ((2 / n) * H2) + \
      (((m - n ** 2)/(2 * (1 + n))) * (h_1 - h_1p - (J2 / n) - (H2 / n ** 2))))
-    
+    math
     if verbose:
         print('c_0p',c_0p)
         print(f'h_1: {h_1}, h_1p: {h_1p}, h_2: {h_2}, h2_p: {h_2p}')
@@ -199,8 +200,10 @@ def generate_figure(J_vectors, x_axis, variable, ax=None, path="images/", **para
         else: 
             title = "Stability of interface over changing {}, g,r,k,u0={},{},{},{}".format(variable,
                     g, r, K, U0)
-
-        xlabel = "$m \ \ (\mu_2 / \mu_1)$"
+        if "x_label" in params and params["x_label"] is not None:
+            xlabel = params["x_label"]
+        else:
+            xlabel = "$m \ \ (\mu_2 / \mu_1)$"
         ax.set_xscale("log")
         
         if ("viscosity_lim" in params):
@@ -256,48 +259,60 @@ def plot_vel_profile(ax, path="images/", **params):
 
     Equations (7) and (8) of Yih 1967. 
     """
-    mu2, mu1, d2, d1, K, U0, N_POINTS = (params["mu2"], params["mu1"], params["d2"],
+    mu2s, mu1, d2, d1, K, U0, N_POINTS = (params["mu2s"], params["mu1"], params["d2"],
                                              params["d1"], params["dP"], params["U0"], params["N_POINTS"])
-    
-    # Calculate velocity profiles
-    m = mu2 / mu1
-    n = d2 / d1
+    lines = ["-","--","-.",":"]
+    linecycler = cycle(lines)
 
-    y1s = np.linspace(0, d1, N_POINTS) / d1
-    y2s = np.linspace(-d2, 0, N_POINTS) / d1
+    colorcycler = None
+    if "vel_colors" in params and params["vel_colors"] is not None:
+        colorcycler = cycle(params["vel_colors"]) 
 
-    A2 = -(.5 * (K / mu2) * U0) * (d1 ** 2)
-    A1 = m * A2
+    for mu2 in mu2s:
+        # Calculate velocity profiles
+        m = mu2 / mu1
+        n = d2 / d1
 
-    a2 = (1 + A2 * (n**2 - m)) / (m + n)
-    a1 = m * a2
+        y1s = np.linspace(0, d1, N_POINTS) / d1
+        y2s = np.linspace(-d2, 0, N_POINTS) / d1
 
-    b = ((1 - A1*(1 + n)) * n) / (m + n)
+        A2 = -(.5 * (K / mu2) * U0) * (d1 ** 2)
+        A1 = m * A2
 
-    U1 = (A1 * (y1s ** 2) + a1 * y1s + b) / U0
-    U2 = (A2 * (y2s ** 2) + a2 * y2s + b) / U0
+        a2 = (1 + A2 * (n**2 - m)) / (m + n)
+        a1 = m * a2
 
-    velocity_profile = np.concatenate((U2, U1))
+        b = ((1 - A1*(1 + n)) * n) / (m + n)
 
-    if "velocity_figsize" not in params:
-        params["velocity_figsize"] = (8,4)
-    
-    #fig, ax = plt.subplots(figsize=params["velocity_figsize"])
+        U1 = (A1 * (y1s ** 2) + a1 * y1s + b) / U0
+        U2 = (A2 * (y2s ** 2) + a2 * y2s + b) / U0
 
-    # remove the top, bottom, and left axes
+        velocity_profile = np.concatenate((U2, U1))
+
+        # generate plot
+        if colorcycler:
+            ax.plot(velocity_profile, np.concatenate((y2s, y1s)), label=f"{mu2 / mu1}", 
+                    linestyle=next(linecycler), color=next(colorcycler))
+        else:
+            ax.plot(velocity_profile, np.concatenate((y2s, y1s)), label=f"{mu2 / mu1}", 
+                    linestyle=next(linecycler))
+            
+
+    if "legend" in params and params["legend"]:
+        ax.legend(title="$m$")
+
+    # remove the top, bottom, and left axis lines
     ax.spines['top'].set_visible(False)
     ax.spines['left'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
     
     # Visualize boundaries of layers and the interface
+    ax.axhline(y=0, color="gray", linestyle ="--", linewidth=1) 
+    ax.axhline(y= d1 / d1, color="black", linewidth=1) 
+    ax.axhline(y= -d2 / d1, color="black", linewidth=1) 
 
-    ax.axhline(y=0, color="black", linestyle ="--") 
-    ax.axhline(y= d1 / d1, color="black") 
-    ax.axhline(y= -d2 / d1, color="black") 
-
-    # generate plot, label axes, title
-    ax.plot(velocity_profile, np.concatenate((y2s, y1s)))
+    # Create title and axes labels
     if "vel_title" in params and params["vel_title"] is not None:
         title = params["vel_title"]
     else:
@@ -307,8 +322,10 @@ def plot_vel_profile(ax, path="images/", **params):
         params["label_size"] = 14
     if "title_size" not in params:
         params["title_size"] = 14
-
+    
+    # Title and label axes
     ax.set_title(title, fontsize=params["title_size"])
+
     if "y_label" in params and params["y_label"] is not None:
         ax.set_ylabel(params["y_label"], fontsize=params["label_size"])
     if "x_label" in params and params["x_label"] is not None:
