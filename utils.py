@@ -11,9 +11,6 @@ This file handles the majority of the graphing work needed to test the linear st
 the long wave perturbation approximation. 
 
 The two functions to be used in a jupyter notebook are plot_vel_profile() and plot_stability_graph(). 
-
-TODO: 
-- return intercepts of stability curves to check velocity profiles more easily
 """
 
 
@@ -93,12 +90,8 @@ def yihJ(**params):
     h_2 = h2(-n)
     h_2p = h2p(-n)
     
-    if r == 1:
-        H2 = r * h_2 
-        J2 = r * h_2p 
-    else:
-        H2 = r * h_2 - ((n ** 3) / 6) * ((1 / ((c_0p * F2))) -(((r - 1) * (c_0p * B1 + a1))))
-        J2 = r * h_2p + (((n ** 2) / 2)) * ((1 / ((c_0p * F2))) - (((r - 1) * (c_0p * B1 + a1))))
+    H2 = r * h_2 - ((n ** 3) / 6) * ((1 / ((c_0p))) * F2) -(((r - 1) * (c_0p * B1 + a1)))
+    J2 = r * h_2p + (((n ** 2) / 2)) * ((1 / ((c_0p))) * F2) - (((r - 1) * (c_0p * B1 + a1)))
     
     
     J = (((1 / m) * (c_0p ** 2)) / (a1 - a2)) * \
@@ -118,6 +111,7 @@ def yihJ(**params):
         params["cache"][args] = J
 
     return J
+
 
 def calc_J_vectors(lines="d2s", variables="mu2s", **params):
     J_vectors = {}
