@@ -3,6 +3,8 @@
 %%%%%%%Yih instability with free slip%%%%%%%%
 %%%%%%%%%%%%top condition%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear all
+close all
 syms m n a_u a_l c du U_p K_p mu_u
 
 %equation 33
@@ -20,14 +22,14 @@ syms m n a_u a_l c du U_p K_p mu_u
 %-(a_l-a_u)/c  1   0  0  0 0  -1 0     0      0] %10 
 
 %short form
-%%%%Bu Cu Du Bl Cl   Dl
-A = [0  1 0  0  -m    0;
-      0  0 1  0   0   -m;
-     1  1 1  0   0    0;
-      0  1 3  0   0    0;
-     0  0 0 -n   n^2 -n^3;
-     0  0 0  1  -2*n 3*n^2;
-     1  0 0 -1   0     0];
+%%%%Bu Cu Du Bl Cl   Dl E
+A = [0  1 0  0  -m    0 0;
+     0  0 1  0   0   -m 0;
+     1  1 1  0   0    0 1;
+     0  1 3  0   0    0 0; %<free slip condition
+     0  0 0 -n   n^2 -n^3 1;
+     0  0 0  1  -2*n 3*n^2 0];
+%      1  0 0 -1   0     0 -(a_l-a_u)/c];
 
 %steady state solution
 % A  = [0 0 1 0 0 -1;
@@ -44,5 +46,6 @@ A = [0  1 0  0  -m    0;
 % b = [ 0; 0; 0; 0; 0;  0; 0;  0; 0;  0];
 
 %short form
-b = [0; 0; -1; 0; -1; 0; (a_l-a_u)/c];
-inv(A)*b
+b = -A(:,end);
+
+inv(A(:,1:end-1))*b
