@@ -21,7 +21,7 @@ syms m n a_u a_l c du U_p K_p mu_u
 %        1  0   0  0  0 -1             0  0     0      0; %9
 %-(a_l-a_u)/c  1   0  0  0 0  -1 0     0      0] %10 
 
-%short form
+%short form where we assume E=1
 %%%%Bu Cu Du Bl Cl   Dl E
 A = [0  1 0  0  -m    0 0;
      0  0 1  0   0   -m 0;
