@@ -8,16 +8,16 @@ mu_l  = 10^3;
 mu_u  = 2*10^3;
 m     = mu_l/mu_u;
 rho_l = 3000;
-rho_u = 2900;
+rho_u = 3000;%2900;
 r     = rho_l/rho_u;
 du    = 1;
 dl    = 2;
 g     = 9.8;
 n     = dl/du;
 
- U_p   = mu_u/rho_u/du;
-K_p    = mu*U_p/du^2; 
-% U_p   = K_p*du^2/mu_u;
+%  U_p   = mu_u/rho_u/du;
+K_p    = 1;%mu*U_p/du^2; 
+ U_p   = K_p*du^2/mu_u;
 
 y = -n:.01:1;
 
