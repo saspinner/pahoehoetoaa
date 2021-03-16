@@ -13,7 +13,7 @@ syms m n c du U_p K_p mu_u ...
 %     Au Bu Cu Du Al Bl Cl Dl c0p Ra alpha ...
 %     au al DeltaBu DeltaCu DeltaDu DeltaBl DeltaCl DeltaDl...
 %     bu bl hu_1 dhu_1 d2hu_1 hl_n dhl_n
-fs = 1;   %free slip? 1 is yes 0 is no 
+fs = 0;   %free slip? 1 is yes 0 is no 
 
 
 
@@ -105,14 +105,18 @@ simplify(G);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-m = 1.1:.1:70;
-n = 1.25;
-r = 1;
-K_p = 10;
-du = 1;
-mu_u = 10^3;
-U_p = K_p*du^2/mu_u;
-F = 0;
+m     = 1.1:.1:70;
+n     = 1.25;
+r     = 1;
+K_p   = 0;
+du    = 1;
+mu_u  = 10^3;
+rho_l = 3000;
+rho_u = 3000;%2900;
+r     = rho_l/rho_u;
+U_p   = 1;%K_p*du^2/mu_u;
+g     = 9.8;
+F     = 0;%sqrt(rho_l-rho_u)/rho_u*g*du/U_p^2;
 
 
 JJ = subs(J*10^4);
