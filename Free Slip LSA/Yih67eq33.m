@@ -5,7 +5,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear all
 close all
-syms m n c du U_p K_p mu_u ...
+syms m n c du U_p K_p mu_u Kl_p Ku_p dl mu_l...
     Au Bu Cu Du Al Bl Cl Dl c0p Ra r alpha ...
     au al F DeltaBu DeltaCu DeltaDu DeltaBl DeltaCl DeltaDl...
     bu bl hu_1 dhu_1 d2hu_1 hl_n dhl_n
@@ -13,26 +13,33 @@ syms m n c du U_p K_p mu_u ...
 %     Au Bu Cu Du Al Bl Cl Dl c0p Ra alpha ...
 %     au al DeltaBu DeltaCu DeltaDu DeltaBl DeltaCl DeltaDl...
 %     bu bl hu_1 dhu_1 d2hu_1 hl_n dhl_n
-fs = 0;   %free slip? 1 is yes 0 is no 
+fs = 1;   %free slip? 1 is yes 0 is no 
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%equation 7 and 8%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%Steady State Solution
 if fs == 1
     fs_7 = [2 1 0 0 0 0];
-    b_7 = [0; 0; 0; 0; 0; (-du^2*K_p)/(2*U_p*mu_u)];
+    b_7 = [0; 0; 0; 0; (-du^2*Ku_p)/(2*U_p*mu_u); (-du^2*Kl_p)/(2*U_p*mu_l)];
+    A_7  = [0   0  1  0   0 -1; 
+        0   1  0  0   -m 0;
+        0   0  0  n^2 -n 1;
+        fs_7; %<=free slip?
+        1   0  0  0   0 0;
+        0   0  0   1   0 0];
 else
     fs_7 = [1 1 1 0 0 0];
     b_7 = [0; 0; 0; 1; 0; (-du^2*K_p)/(2*U_p*mu_u)];
-end
-%steady state solution
-%       Au au bu Al   al bl
-A_7  = [0   0  1  0   0 -1;
+    %       Au au bu Al   al bl
+    A_7  = [0   0  1  0   0 -1; 
         0   1  0  0   -m 0;
         0   0  0  n^2 -n 1;
         fs_7; %<=free slip?
         1   0  0  -m   0 0;
         1   0  0   0   0 0];
+end
+
     
 M_7 = A_7\b_7;
 Au = M_7(1); au = M_7(2); bu = M_7(3); 
@@ -104,24 +111,52 @@ G = J*(au-al)*m/c0p^2;
 simplify(G);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%repoduce Yih?
+% m     = 1.1:1:70;
+% n     = 1.25;
+% r     = 1;
+% K_p   = 0;
+% du    = 1;
+% mu_u  = 10^3;
+% rho_l = 3000;
+% rho_u = 3000;%2900;
+% r     = rho_l/rho_u;
+% U_p   = 1;%K_p*du^2/mu_u;
+% g     = 9.8;
+% F     = sqrt(rho_l-rho_u)/rho_u*g*du/U_p^2;
 
-m     = 1.1:.1:70;
+%or
+m     = 0.01:.01:.9;
 n     = 1.25;
-r     = 1;
-K_p   = 0;
-du    = 1;
-mu_u  = 10^3;
 rho_l = 3000;
-rho_u = 3000;%2900;
+rho_u = 2990;
 r     = rho_l/rho_u;
-U_p   = 1;%K_p*du^2/mu_u;
+gamma = n^3.*r./m.^2;
+K_p   = 100;
+Ku_p   = K_p; %mu_u^2/rho_u/du^3;
+Kl_p   = Ku_p./gamma;%mu_l^2/rho_l/dl^3;
+du    = 1;
+dl    = du*n;
+mu_u  = 10^3;
+mu_l  = m.*mu_u;
+U_p   = Ku_p.*du^2./mu_u;
 g     = 9.8;
-F     = 0;%sqrt(rho_l-rho_u)/rho_u*g*du/U_p^2;
+F     = sqrt(rho_l-rho_u)./rho_u*g*du./U_p.^2;
+
 
 
 JJ = subs(J*10^4);
 plot(m, JJ,'-b')
 hold on
+% n = 0.5;
+% JJ = subs(J*10^4);
+% plot(m, JJ,'-b')
+% n = 0.75;
+% JJ = subs(J*10^4);
+% plot(m, JJ,'-b')
+n = 1.5;
+JJ = subs(J*10^4);
+plot(m, JJ,'-b')
 n = 2.5;
 JJ = subs(J*10^4);
 plot(m, JJ,'-b')
