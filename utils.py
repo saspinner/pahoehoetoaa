@@ -24,11 +24,24 @@ def yihJ(**params):
              params["mu1"], params["d2"], params["d1"], 
                  params["g"], params["dP"], params["U0"], params["verbose"])
     
+    # if we pass in the froude number directly, we will
+    # change U0's velocity to achieve this froude number
+    if "F" in params:
+        F2 = params["F"] ** 2
+        U0 = np.sqrt(((rho2 - rho1) / rho1) * (g * d1 / (F2)))
+    
     r = rho2 / rho1
     m = mu2 / mu1
     n = d2 / d1
+    
+    # we want the ratios to map to a flow height for purposes
+    # of calculating Fraude number, uses d1 but not n
+    if "flow_height" in params:
+        d1 = params["flow_height"] / (1 + m)
+        d2 = params["flow_height"] - d1
 
-    args = (r, m, n, g, K, U0) 
+
+    args = (r, m, n, g, K, U0, params["flow_height"]) 
 
     cache = False
     if "cache" in params:
@@ -110,7 +123,7 @@ def yihJ(**params):
     if cache:
         params["cache"][args] = J
 
-    return J
+    return J, np.sqrt(F2)
 
 
 def calc_J_vectors(lines="d2s", variables="mu2s", **params):
