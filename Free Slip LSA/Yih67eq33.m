@@ -9,11 +9,8 @@ syms m n c du U_p K_p mu_u Kl_p Ku_p dl mu_l...
     Au Bu Cu Du Al Bl Cl Dl c0p Ra r alpha ...
     au al F DeltaBu DeltaCu DeltaDu DeltaBl DeltaCl DeltaDl...
     bu bl hu_1 dhu_1 d2hu_1 hl_n dhl_n
-% syms c du mu_u ...
-%     Au Bu Cu Du Al Bl Cl Dl c0p Ra alpha ...
-%     au al DeltaBu DeltaCu DeltaDu DeltaBl DeltaCl DeltaDl...
-%     bu bl hu_1 dhu_1 d2hu_1 hl_n dhl_n
-fs = 1;   %free slip? 1 is yes 0 is no 
+
+fs = 0;   %free slip? 1 is yes 0 is no 
 
 
 
@@ -111,7 +108,8 @@ G = J*(au-al)*m/c0p^2;
 simplify(G);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%repoduce Yih?
+%reproduce Yih?
+
 % m     = 1.1:1:70;
 % n     = 1.25;
 % r     = 1;
@@ -126,45 +124,206 @@ simplify(G);
 % F     = sqrt(rho_l-rho_u)/rho_u*g*du/U_p^2;
 
 %or
-m     = 0.01:.01:.9;
-n     = 1.25;
-rho_l = 3000;
-rho_u = 2990;
-r     = rho_l/rho_u;
-gamma = n^3.*r./m.^2;
-K_p   = 100;
-Ku_p   = K_p; %mu_u^2/rho_u/du^3;
-Kl_p   = Ku_p./gamma;%mu_l^2/rho_l/dl^3;
-du    = 1;
-dl    = du*n;
-mu_u  = 10^3;
-mu_l  = m.*mu_u;
-U_p   = Ku_p.*du^2./mu_u;
-g     = 9.8;
-F     = sqrt(rho_l-rho_u)./rho_u*g*du./U_p.^2;
+if fs == 1
+    n     = 5;
+    rho_l = 3000;
+    rho_u = 2970;
+    r     = rho_l/rho_u;
+    du    = 1;
+    dl    = du*n;
+    K_p   = 0;
+    mu_l  = 10^3;
+    U_p   = .2:.2:20;
+    g     = 9.8;
+    
+    %m1
+    m     = .1;
+    mu_u  = mu_l./m;
+    nn = 0;
+    K_p   = 100:10:10000;
+    Ku_p   = K_p; 
+    U_p   = Ku_p.*du^2./mu_u;
+    F     = sqrt((rho_l-rho_u)./rho_u*g*du./U_p.^2);
+    for n = .2:.2:6
+        nn = nn + 1;
+        dl    = du*n;
+        gamma = n.^3.*r./m.^2;
+        Kl_p   = Ku_p./gamma;
+        JJ1(nn,:) = subs(J*10^4);
+    end
+    nn = 0;
+    n = .2:.2:6;
+    dl    = du.*n;
+    JJJ1 = double(JJ1);
+    %m2
+    m     = .2;
+    mu_u  = mu_l./m;
+    nn = 0;
+    K_p   = 100:10:10000;
+    Ku_p   = K_p; 
+    U_p   = Ku_p.*du^2./mu_u;
+    F     = sqrt((rho_l-rho_u)./rho_u*g*du./U_p.^2);
+    n  = 0;
+    for n = .2:.2:6
+        nn = nn + 1;
+        dl    = du*n;
+        gamma = n.^3.*r./m.^2;
+        Kl_p   = Ku_p./gamma;
+        JJ2(nn,:) = subs(J*10^4);
+    end
+    nn = 0;
+    n = .2:.2:6;
+    dl    = du.*n;
+    JJJ2 = double(JJ2);
+        %m3
+    m     = .33;
+    mu_u  = mu_l./m;
+    nn = 0;
+    K_p   = 100:10:10000;
+    Ku_p   = K_p; 
+    U_p   = Ku_p.*du^2./mu_u;
+    F     = sqrt((rho_l-rho_u)./rho_u*g*du./U_p.^2);
+    n  = 0;
+    for n = .2:.2:6
+        nn = nn + 1;
+        dl    = du*n;
+        gamma = n.^3.*r./m.^2;
+        Kl_p   = Ku_p./gamma;
+        JJ3(nn,:) = subs(J*10^4);
+    end
+    nn = 0;
+    n = .2:.2:6;
+    dl    = du.*n;
+    JJJ3 = double(JJ3);
+    
+    
+else
+
+    n     = 5;
+    rho_l = 3000;
+    rho_u = 2970;
+    r     = rho_l/rho_u;
+    du    = 1;
+    dl    = du*n;
+    K_p   = 0;
+    mu_l  = 10^3;
+    U_p   = .2:.2:20;
+    g     = 9.8;
+    F     = sqrt((rho_l-rho_u)./rho_u*g*du./U_p.^2);
+    %m1
+    m     = .1;
+    mu_u  = mu_l./m;
+    nn = 0;
+    for n = .2:.2:6
+        nn = nn + 1;
+        dl    = du*n;
+        JJ1(nn,:) = subs(J*10^4);
+    end
+    nn = 0;
+    n = .2:.2:6;
+    dl    = du.*n;
+    JJJ1 = double(JJ1);
+    %m2
+    m     = .2;
+    mu_u  = mu_l./m;
+    nn = 0;
+    n  = 0;
+    for n = .2:.2:6
+        nn = nn + 1;
+        dl    = du*n;
+        JJ2(nn,:) = subs(J*10^4);
+    end
+    nn = 0;
+    n = .2:.2:6;
+    dl    = du.*n;
+    JJJ2 = double(JJ2);
+        %m3
+    m     = .33;
+    mu_u  = mu_l./m;
+    nn = 0;
+    n  = 0;
+    for n = .2:.2:6
+        nn = nn + 1;
+        dl    = du*n;
+        JJ3(nn,:) = subs(J*10^4);
+    end
+    nn = 0;
+    n = .2:.2:6;
+    dl    = du.*n;
+    JJJ3 = double(JJ3);
+
+end
 
 
 
-JJ = subs(J*10^4);
-plot(m, JJ,'-b')
+
+figure
+
+[M,NN] = meshgrid(m,n);
+[FF,N] = meshgrid(F,n);
+
+
+
+% set printing options
+if fs == 1
+str       = {'Regime_FreeSurface'};
+else
+    str   = {'Regime_NoSlip'};
+end
+figname   = char(strcat(str(1)));
+format    = '-dpng';
+resl      = '-r200';
+rend      = '-opengl';
+printfig  = true;
+
+
+% prepare formating options
+HA = {'HorizontalAlignment','left','center','right'};
+VA = {'VerticalAlignment','bottom','middle','top'};
+UN = {'Units','Normalized','Inches'};
+TX = {'Interpreter','Latex'};
+TL = {'TickLabelInterpreter','Latex'};
+LW = {'LineWidth',1,1.25,1.5,2};
+FS = {'FontSize',10,15,18,21,24};
+MS = {'MarkerSize',6,8,12};
+LS = {'LineStyle','-','--','-.',':'};
+% LC = {'Color',color};
+
+% prepare axes/borders dimensions
+axh = 3*2;
+axw = axh;
+ahs = 0.15;
+avs = 0.15;
+axb = 0.7;
+axt = 0.2;
+axl = 0.8;
+axr = 0.5;
+cbh = axh; cbw = 0.2;
+fh = axb + 1*axh + 1*avs +           axt;
+fw = axl + 1*axw + 1*ahs + 1.5*cbw + axr;
+
+% initialize figure and axes
+f = figure;
+set(f,'Units','Inches','Position',[0.7 12 fw fh]);
+set(f,'PaperPosition',[0 0 fw fh],'PaperSize',[fw fh]);
+set(f,'Color','w','InvertHardcopy','off', 'MenuBar','none');
+set(f,'Resize','off','Toolbar','none');
+ax(1) = axes('Units','Inches','position',[axl         axb         axw axh]);
+
+IJ1 = JJJ1./abs(JJJ1);
+IJ2 = JJJ2./abs(JJJ2);
+IJ2(IJ2<0) = 0;
+IJ3 = JJJ3./abs(JJJ3);
+IJ3(IJ3<0) = 0;
+IJ = IJ1 + IJ2 + IJ3;
+axes(ax(1)); hold on;
+contourf(N,FF,IJ,'edgecolor','none');
+colormap([ 33,102,172;253,219,199;239,138,98;178,24,43]./255)
 hold on
-% n = 0.5;
-% JJ = subs(J*10^4);
-% plot(m, JJ,'-b')
-% n = 0.75;
-% JJ = subs(J*10^4);
-% plot(m, JJ,'-b')
-n = 1.5;
-JJ = subs(J*10^4);
-plot(m, JJ,'-b')
-n = 2.5;
-JJ = subs(J*10^4);
-plot(m, JJ,'-b')
-hold on
-n = 5;
-JJ = subs(J*10^4);
-plot(m, JJ,'-b')
-hold on
-n = 10;
-JJ = subs(J*10^4);
-plot(m, JJ,'-b')
+
+
+set(gca,'YScale', 'log')
+xlabel('Height ration, n',TX{:},FS{[1,4]},UN{[1,3]},'Position',[axw/2+ahs/2,-axb/2]);
+ylabel('Froude number, F',TX{:},FS{[1,4]},UN{[1,3]},'Position',[-axl/2,axh/2]);
+
+print(f,format,resl,rend,figname,'-loose');
