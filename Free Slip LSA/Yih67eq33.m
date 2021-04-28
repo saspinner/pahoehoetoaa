@@ -1,7 +1,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%solving system of equations for%%%%%%%%%%%
-%%%%%%%Yih instability with free slip%%%%%%%%
-%%%%%%%%%%%%top condition%%%%%%%%%%%%%%%%%%%%
+%%%%%%%Yih instability with free %%%%%%%%%%%%
+%%%%%%%%%%%and no slip top condition%%%%%%%%%
+%%%%%This script will plot results too%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear all
 close all
@@ -10,7 +11,7 @@ syms m n c du U_p K_p mu_u Kl_p Ku_p dl mu_l...
     au al F DeltaBu DeltaCu DeltaDu DeltaBl DeltaCl DeltaDl...
     bu bl hu_1 dhu_1 d2hu_1 hl_n dhl_n
 
-fs = 0;   %free slip? 1 is yes 0 is no 
+fs = 1;   %free slip? 1 is yes 0 is no 
 
 
 
@@ -18,7 +19,7 @@ fs = 0;   %free slip? 1 is yes 0 is no
 %%%%Steady State Solution
 if fs == 1
     fs_7 = [2 1 0 0 0 0];
-    b_7 = [0; 0; 0; 0; (-du^2*Ku_p)/(2*U_p*mu_u); (-du^2*Kl_p)/(2*U_p*mu_l)];
+    b_7 = [0; 0; 0; 0; -(du^2*Ku_p)/(2*U_p*mu_u); (-du^2*Kl_p)/(2*U_p*mu_l)];
     A_7  = [0   0  1  0   0 -1; 
         0   1  0  0   -m 0;
         0   0  0  n^2 -n 1;
@@ -125,77 +126,53 @@ simplify(G);
 
 %or
 if fs == 1
+    
     n     = 5;
     rho_l = 3000;
     rho_u = 2970;
     r     = rho_l/rho_u;
-    du    = 1;
+    du    = .1;
     dl    = du*n;
     K_p   = 0;
     mu_l  = 10^3;
     U_p   = .2:.2:20;
     g     = 9.8;
+    phi   = 1:45;
+    mm     = [.1 .2 .33];
     
-    %m1
-    m     = .1;
+    for ll = 1:numel(mm)
+    m     = mm(ll);
     mu_u  = mu_l./m;
     nn = 0;
-    K_p   = 100:10:10000;
-    Ku_p   = K_p; 
+    K_p   = 1*10e2:10e3:10e5;
+    Ku_p   =  K_p ;
     U_p   = Ku_p.*du^2./mu_u;
     F     = sqrt((rho_l-rho_u)./rho_u*g*du./U_p.^2);
     for n = .2:.2:6
         nn = nn + 1;
         dl    = du*n;
         gamma = n.^3.*r./m.^2;
-        Kl_p   = Ku_p./gamma;
-        JJ1(nn,:) = subs(J*10^4);
+        Kl_p   =  K_p./gamma ;
+        if ll==1
+            JJ1(nn,:) = subs(J*10^4);
+        elseif ll == 2
+            JJ2(nn,:) = subs(J*10^4);
+        else
+            JJ3(nn,:) = subs(J*10^4);
+        end
     end
     nn = 0;
     n = .2:.2:6;
     dl    = du.*n;
-    JJJ1 = double(JJ1);
-    %m2
-    m     = .2;
-    mu_u  = mu_l./m;
-    nn = 0;
-    K_p   = 100:10:10000;
-    Ku_p   = K_p; 
-    U_p   = Ku_p.*du^2./mu_u;
-    F     = sqrt((rho_l-rho_u)./rho_u*g*du./U_p.^2);
-    n  = 0;
-    for n = .2:.2:6
-        nn = nn + 1;
-        dl    = du*n;
-        gamma = n.^3.*r./m.^2;
-        Kl_p   = Ku_p./gamma;
-        JJ2(nn,:) = subs(J*10^4);
+    if ll ==1
+       JJJ1 = double(JJ1);
+    elseif ll == 2
+        JJJ2 = double(JJ2);
+    else
+       JJJ3 = double(JJ3);
     end
-    nn = 0;
-    n = .2:.2:6;
-    dl    = du.*n;
-    JJJ2 = double(JJ2);
-        %m3
-    m     = .33;
-    mu_u  = mu_l./m;
-    nn = 0;
-    K_p   = 100:10:10000;
-    Ku_p   = K_p; 
-    U_p   = Ku_p.*du^2./mu_u;
-    F     = sqrt((rho_l-rho_u)./rho_u*g*du./U_p.^2);
-    n  = 0;
-    for n = .2:.2:6
-        nn = nn + 1;
-        dl    = du*n;
-        gamma = n.^3.*r./m.^2;
-        Kl_p   = Ku_p./gamma;
-        JJ3(nn,:) = subs(J*10^4);
-    end
-    nn = 0;
-    n = .2:.2:6;
-    dl    = du.*n;
-    JJJ3 = double(JJ3);
-    
+        
+    end 
     
 else
 
@@ -259,7 +236,7 @@ end
 
 figure
 
-[M,NN] = meshgrid(m,n);
+% [M,NN] = meshgrid(m,n);
 [FF,N] = meshgrid(F,n);
 
 

@@ -8,19 +8,20 @@ mu_l  = 10^3;
 mu_u  = 2*10^3;
 m     = mu_l/mu_u;
 rho_l = 3000;
-rho_u = 3000;%2900;
+rho_u = 3000;
 r     = rho_l/rho_u;
 du    = 1;
 dl    = 1;
 g     = 9.8;
 n     = dl/du;
+phi   = 25;
 
 %  U_p   = mu_u/rho_u/du;
 % K_p    = 1;%mu*U_p/du^2; 
-K_p    = 10;
-Ku_p   = K_p; %mu_u^2/rho_u/du^3;
+K_p    = 10e3;
+Ku_p   =  K_p + rho_u.*g.*du.*sind(phi); %mu_u^2/rho_u/du^3; %
 gamma  = n^3*r/m^2;
-Kl_p   = Ku_p/gamma;%mu_l^2/rho_l/dl^3;
+Kl_p   =  rho_l.*g.*dl.*sind(phi) + K_p/gamma;%mu_l^2/rho_l/dl^3; %
  U_p   = Ku_p*du^2/mu_u;
 
 y = -n:.01:1;
@@ -34,7 +35,7 @@ A_u = -Ku_p*du^2/(2*mu_u*U_p);
 a_l = Ku_p*du^2/(mu_l*U_p);
 a_u = m*a_l;
 % b = -A_l*(n^2+2*n);
-b   = Kl_p*dl/(2*mu_l*U_p)*(dl+2*gamma*du);
+b   = (du^2*n*(2*Ku_p*mu_l + Kl_p*m*mu_u*n))/(2*U_p*m*mu_l*mu_u);
 
 %no slip
 % a_l = (1+A_l*(n^2-m))/(m+n);
