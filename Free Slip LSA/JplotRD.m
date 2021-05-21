@@ -9,8 +9,10 @@ function JplotRD(N,FF,IJ,fs)
 % set printing options
 if fs == 1
 str       = {'Regime_FreeSurface'};
-else
-    str   = {'Regime_NoSlip'};
+elseif fs == 0
+    str   = {'Regime_ConstSlip'};
+elseif fs == 2
+    str  = {'Regime_NoSlip'};
 end
 figname   = char(strcat(str(1)));
 format    = '-dpng';
