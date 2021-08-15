@@ -4,10 +4,10 @@ This repository contains the scripts and notebooks used to run experiments and v
 
 ### Paper Figures:
 
-<p align="center">
+<p align="center" style="background-color:white">
 <img width="48%" src="./paper_figures/free_surface_phase.png">
 <img width="48%" src="./paper_figures/no_slip_phase.png">
-<img width="80%" src="./paper_figures/box_plots_no_slip.png">
+<img width="100%" src="./paper_figures/box_plots_no_slip.png">
 </p>
 
 ### Repo contents:
