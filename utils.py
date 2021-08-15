@@ -4,7 +4,10 @@ import matplotlib.pyplot as plt
 import math
 from itertools import cycle
 
-## Test the vectorized code:
+"""
+Taken from Matlab function solutions that can be found within the 'Free Slip LSA' directory.
+"""
+
 def no_slip_J(**params):
     
     Ku_p, n, mu_u, m, U_p, n, du, F, r, Kl_p, m, mu_l = \
@@ -17,7 +20,6 @@ def no_slip_J(**params):
 
 def free_surface_J(**params):
     
-    # looking for these tokens ['Ku_p', 'n', 'mu_u', 'm)', 'U_p', '(n', 'du', 'F', 'r', 'Kl_p', 'm', 'mu_l']
     Ku_p, n, mu_u, m, U_p, n, du, F, r, Kl_p, m, mu_l = \
         (params["Ku_p"], params["n"], params["mu_u"], params["m"], params["U_p"], 
         params["n"], params["du"], params["F"], params["r"], params["Kl_p"], 
