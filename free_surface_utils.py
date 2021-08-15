@@ -1,5 +1,8 @@
 import numpy as np
 import os
+import matplotlib.pyplot as plt
+import math
+from itertools import cycle
 
 ## Test the vectorized code:
 def no_slip_J(**params):
