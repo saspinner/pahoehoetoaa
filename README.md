@@ -1,5 +1,7 @@
 # Internal shear instability in layered lava flow may initiate the pahoehoe to ’a’a lava transition
 ---
+[![DOI](https://zenodo.org/badge/281829305.svg)](https://zenodo.org/badge/latestdoi/281829305)
+
 This repository contains the scripts and notebooks used to run experiments and visualize the stability of a model lava flow under the free-surface and no-slip upper boundary conditions. The figures it produces are shown below and in the _Geophysical Research Letters_ submitted paper of the same name. 
 
 ### Paper Figures:
